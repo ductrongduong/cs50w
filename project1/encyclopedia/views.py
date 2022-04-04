@@ -3,6 +3,8 @@ from django import forms
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 import os
+from markdown2 import markdown
+from random import randint
 
 from . import util
 
@@ -31,27 +33,14 @@ def index(request):
     })
 
 def entry(request, name):
+    content = util.get_entry(name)
+    content = markdown(content)
     return render(request, "encyclopedia/content.html", {
         "name": name,
-        "content": util.get_entry(name),
+        "content": content,
         "form": SearchEntryForm()
     })
 
-class SearchEntryForm(forms.Form):
-    dataSearch = forms.CharField(label = "Search")
-
-    def search(request):
-        return render(request, "encyclopedia/index.html", {
-            "form" : SearchEntryForm()
-        })
-
-class CreateNewPageForm(forms.Form):
-    entry = forms.CharField(label = "entry")
-    content = forms.CharField(widget=forms.Textarea(attrs={'name':'body', 'rows':'3', 'cols':'5'}))
-    def search(request):
-        return render(request, "encyclopedia/index.html", {
-            "form" : SearchEntryForm()
-        })
 
 def search(request):
     if request.method == "POST":
@@ -103,4 +92,45 @@ def newpage(request):
         "form" : SearchEntryForm(),
         "formCreateNewPage" : CreateNewPageForm()
     })
+
+def editpage(request, title):
+    content = util.get_entry(title.strip())
+
+    if request.method == "POST":
+        content = request.POST.get("content").strip()
+        util.save_entry(title, content)
+        return render(request, "encyclopedia/content.html", {
+        "name": title,
+        "content": content,
+        "form": SearchEntryForm()
+    })
+
+    return render(request, "encyclopedia/editpage.html", {'content' : content, 'title' : title})
+
+def random_page(request):
+    entries = util.list_entries()
+    random_title = entries[randint(0, len(entries)-1)]
+    return render(request, "encyclopedia/content.html", {
+        "name": random_title,
+        "content": util.get_entry(random_title),
+        "form": SearchEntryForm()
+        })
+
+
+
+class SearchEntryForm(forms.Form):
+    dataSearch = forms.CharField(label = "Search")
+
+    def search(request):
+        return render(request, "encyclopedia/index.html", {
+            "form" : SearchEntryForm()
+        })
+
+class CreateNewPageForm(forms.Form):
+    entry = forms.CharField(label = "entry")
+    content = forms.CharField(widget=forms.Textarea(attrs={'name':'body', 'rows':'3', 'cols':'5'}))
+    def search(request):
+        return render(request, "encyclopedia/index.html", {
+            "form" : SearchEntryForm()
+        })
 
