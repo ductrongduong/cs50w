@@ -1,0 +1,15 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+    <ul>
+        <span class="border">
+            Id: {{pk}}
+            Name : {{ listing.title }}
+             {% if listing.photo %}
+                <img src="{{ listing.photo.url }}"  alt="connect" style="max-height:300px">
+            {% endif %}
+             {{ listing.time }}
+        </span>
+    </ul>
+{% endblock %}
